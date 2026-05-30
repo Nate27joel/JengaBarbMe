@@ -25,10 +25,10 @@ export const Hero = () => {
           >
             
             <h1 className="text-5xl lg:text-7xl font-light text-white leading-[1.1] mb-8 tracking-tight">
-              Professional hair services at your <span className="text-brand italic font-serif">fingertips.</span>
+              Professional hair services at your <span className="text-brand italic font-serif">Safety.</span>
             </h1>
             <p className="text-lg text-[#888] mb-10 max-w-lg leading-relaxed">
-              Book verified barbers and stylists for home visits or in-shop appointments across Lagos, Abuja, and Port Harcourt.
+              Book verified barbers and stylists for home visits or in-shop appointments across Nigeria.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
@@ -61,7 +61,7 @@ export const Hero = () => {
                   <div key={i} className="w-8 h-8 rounded-full border-2 border-bg-deep bg-bg-surface" />
                 ))}
               </div>
-              <p><span className="text-white font-bold">500+</span> stylists joined this month</p>
+              <p><span className="text-white font-bold">500+</span> stylists joined this App</p>
             </div>
           </motion.div>
 

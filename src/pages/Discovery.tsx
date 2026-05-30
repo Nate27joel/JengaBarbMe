@@ -203,12 +203,7 @@ export const Discovery = () => {
                   <p className="text-[#888] text-sm font-medium mt-1 uppercase tracking-widest">Book top pros in under 60 seconds.</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setSortBy('rating')}
-                className="px-8 py-3 bg-brand text-bg-deep rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-xl hover:opacity-90 active:scale-95 transition-all"
-              >
-                View Top Rated
-              </button>
+           
             </div>
           </div>
         )}

@@ -7,13 +7,14 @@ const API_KEY =
   (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY ||
   '';
 
-const hasValidKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
+const hasValidKey = Boolean(API_KEY) && API_KEY !== 'AQ.Ab8RN6Jrm9G6hhgghV6GAR1jluTEdRIvNIX_1sDC6A-B7db5Rw';
 
 interface DiscoveryMapProps {
   professionals: Professional[];
   selectedId?: string;
   onSelect: (pro: Professional) => void;
 }
+
 
 const MapContent = ({ professionals, onSelect }: { professionals: Professional[]; onSelect: (pro: Professional) => void }) => {
   const map = useMap();

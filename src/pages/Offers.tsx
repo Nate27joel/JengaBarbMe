@@ -30,7 +30,7 @@ export const Offers = () => {
           className="inline-flex items-center gap-2 px-4 py-2 bg-brand/5 border border-brand/20 rounded-full text-brand text-[10px] font-black uppercase tracking-[0.2em] mb-8"
         >
           <Zap className="w-4 h-4" /> 
-          Exclusive Promotions
+          Offers
         </motion.div>
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
@@ -38,7 +38,7 @@ export const Offers = () => {
           transition={{ delay: 0.1 }}
           className="text-5xl md:text-7xl font-light tracking-tight italic font-serif mb-6"
         >
-          Signature <span className="text-brand">Offers</span>
+          Todays <span className="text-brand">Offers</span>
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
@@ -46,8 +46,7 @@ export const Offers = () => {
           transition={{ delay: 0.2 }}
           className="max-w-2xl mx-auto text-[#666] text-sm uppercase font-black tracking-widest leading-relaxed"
         >
-          Exceptional value from Lagos & Abuja's finest barbers. <br/>
-          Limited time availability. Book your precision cut today.
+          Book your best style Haircut today.
         </motion.p>
       </div>
 

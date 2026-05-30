@@ -113,7 +113,7 @@ export const Barbers = () => {
           className="inline-flex items-center gap-2 px-4 py-2 bg-brand/5 border border-brand/20 rounded-full text-brand text-[10px] font-black uppercase tracking-[0.2em] mb-8"
         >
           <Award className="w-4 h-4" /> 
-          Verified Master Barbers
+          Verified Barbers
         </motion.div>
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
@@ -121,7 +121,7 @@ export const Barbers = () => {
           transition={{ delay: 0.1 }}
           className="text-5xl md:text-7xl font-light tracking-tight italic font-serif mb-6"
         >
-          The <span className="text-brand">Grooming</span> Directory
+          The <span className="text-brand">Avaliable</span> Hair-Stylist
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
@@ -129,8 +129,8 @@ export const Barbers = () => {
           transition={{ delay: 0.2 }}
           className="max-w-2xl mx-auto text-[#666] text-sm uppercase font-black tracking-widest leading-relaxed mb-12"
         >
-          Discover elite professionals redefining the art of the haircut. <br/>
-          Precision. Style. Sophistication.
+          Discover Barbers for the art of haircut. <br/>
+          Style. Best-Look
         </motion.p>
 
         {/* Dynamic Offers Ribbon */}

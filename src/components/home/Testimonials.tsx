@@ -4,21 +4,21 @@ import { Quote, Star } from 'lucide-react';
 
 const TESTIMONIALS = [
    {
-    name: "GodsPower",
+    name: "Chidi John",
     role: "Regular Client",
-    text: "The home visit service is a game changer for my busy schedule. Quality is top-notch every single time.",
+    text: "The home visit service is a game changer for my busy schedule. Quality is good every single time.",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100"
   },
   {
-    name: "Sarah Alabi",
+    name: "Chinonso Azike",
     role: "Fashion Stylist",
-    text: "Finally a platform that verifies pros. I found my regular braider here and she is absolutely talented.",
+    text: "Finally a platform that verifies barbers with talent. I found my regular braider here and she is absolutely skilled.",
     image: "https://images.unsplash.com/photo-1507152832244-10d45c7eda57?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8YmxhY2slMjBwZXJzb258ZW58MHx8MHx8fDA%3D"
   },
   {
-    name: "Dayo Johnson",
+    name: "Chrisboi Divine",
     role: "Professional Barber",
-    text: "As a pro, BarbMe has helped me reach clients I never would have found otherwise. The app is seamless.",
+    text: "As a Barber, BarbMe has helped me reach clients I never would have found otherwise. The app is GOOD.",
     image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=100"
   }
 ];
@@ -29,7 +29,7 @@ export const Testimonials = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-24">
           <span className="text-brand text-[10px] font-black uppercase tracking-[0.3em] mb-4 block">Testimonials</span>
-          <h2 className="text-5xl font-light text-white tracking-tight italic font-serif">What our <span className="text-brand">Community</span> says.</h2>
+          <h2 className="text-5xl font-light text-white tracking-tight italic font-serif">What our <span className="text-brand">People</span> says.</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">

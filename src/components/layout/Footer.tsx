@@ -15,7 +15,7 @@ export const Footer = () => {
               <span className="text-xl font-bold text-white tracking-tight">BarbMe</span>
             </Link>
             <p className="max-w-sm mb-6 leading-relaxed text-gray-400">
-              Nigeria's #1 platform for verified hair professionals. Making professional hair services safe, accessible, and reliable for everyone.
+              Nigeria's  platform for verified hair professionals. Making hair services safe, accessible, and reliable and affordable for everyone.
             </p>
 
           </div>
