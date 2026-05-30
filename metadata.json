@@ -1,0 +1,14 @@
+{
+  "name": "BarbMe",
+  "description": "A two-sided marketplace connecting clients with verified freelance hair professionals across Nigeria for in-shop or home visit services.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "Real-time tracking",
+    "Identity verification",
+    "Secure payments",
+    "Service discovery"
+  ]
+}

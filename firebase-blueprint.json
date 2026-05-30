@@ -1,0 +1,121 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with roles and verification details for BarbMe.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique user identifier matching request.auth.uid"
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "User's full name"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["client", "professional", "admin"],
+          "description": "The user role"
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL to the user avatar"
+        },
+        "nin": {
+          "type": "string",
+          "description": "National Identification Number (for professionals)"
+        },
+        "isVerified": {
+          "type": "boolean",
+          "description": "Indicates if the user is verified (auth check)"
+        },
+        "verificationStatus": {
+          "type": "string",
+          "enum": ["pending", "verified", "rejected", "suspended", "banned"],
+          "description": "Verification status"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of when the user profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of when the user profile was last updated."
+        }
+      },
+      "required": ["id", "email", "fullName", "phone", "role", "isVerified", "verificationStatus", "createdAt", "updatedAt"]
+    },
+    "PayoutRequest": {
+      "title": "PayoutRequest",
+      "description": "Payout request submitted by a professional",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the payout request"
+        },
+        "professionalId": {
+          "type": "string",
+          "description": "UID of the professional requesting payout"
+        },
+        "professionalName": {
+          "type": "string",
+          "description": "Name of the professional"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount requested to be paid out"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "processed", "rejected"],
+          "description": "The status of the payout request"
+        },
+        "bankName": {
+          "type": "string",
+          "description": "Bank name"
+        },
+        "accountNumber": {
+          "type": "string",
+          "description": "Bank account number"
+        },
+        "accountName": {
+          "type": "string",
+          "description": "Bank account name"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of when the payout request was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of when the payout request was last updated."
+        }
+      },
+      "required": ["id", "professionalId", "professionalName", "amount", "status", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "The user accounts collection"
+    },
+    "payouts/{payoutId}": {
+      "schema": "PayoutRequest",
+      "description": "Collection of payout requests"
+    }
+  }
+}

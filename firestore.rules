@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Catch-all default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable general security helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUser(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.email is string && data.email.size() <= 128
+        && data.fullName is string && data.fullName.size() <= 128
+        && data.phone is string && data.phone.size() <= 64
+        && data.role is string && (data.role == 'client' || data.role == 'professional' || data.role == 'admin')
+        && data.isVerified is bool
+        && data.verificationStatus is string && (data.verificationStatus == 'pending' || data.verificationStatus == 'verified' || data.verificationStatus == 'rejected' || data.verificationStatus == 'suspended' || data.verificationStatus == 'banned')
+        && (!data.keys().contains('avatarUrl') || (data.avatarUrl is string && data.avatarUrl.size() <= 512))
+        && (!data.keys().contains('nin') || (data.nin is string && data.nin.size() <= 32));
+    }
+
+    function isValidPayoutRequest(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.professionalId is string && data.professionalId.size() <= 128
+        && data.professionalName is string && data.professionalName.size() <= 128
+        && data.amount is number && data.amount > 0 && data.amount <= 10000000
+        && data.status is string && (data.status == 'pending' || data.status == 'approved' || data.status == 'processed' || data.status == 'rejected')
+        && (!data.keys().contains('bankName') || (data.bankName is string && data.bankName.size() <= 128))
+        && (!data.keys().contains('accountNumber') || (data.accountNumber is string && data.accountNumber.size() <= 32))
+        && (!data.keys().contains('accountName') || (data.accountName is string && data.accountName.size() <= 128));
+    }
+
+    // Match users collection
+    match /users/{userId} {
+      // Allow any signed-in user to retrieve a profile (e.g. for booking lists, stylist queries)
+      allow get: if isSignedIn();
+      
+      // Strict list rules to prevent scraping of emails, phones, and metadata
+      allow list: if isSignedIn() && resource.data.id == request.auth.uid;
+
+      // Create new user profile
+      allow create: if isSignedIn() && isOwner(userId) && isValidId(userId)
+        && incoming().keys().hasAll(['id', 'email', 'fullName', 'phone', 'role', 'isVerified', 'verificationStatus', 'createdAt', 'updatedAt'])
+        && incoming().keys().size() >= 9 && incoming().keys().size() <= 11
+        && isValidUser(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      // Update user profile actions
+      allow update: if isSignedIn() && isOwner(userId) && isValidId(userId)
+        && isValidUser(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action: Edit Profile Info (can only change a specific list of fields)
+          incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'phone', 'avatarUrl', 'nin', 'updatedAt'])
+        );
+
+      // Disable client deletes
+      allow delete: if false;
+    }
+
+    // Match payouts collection
+    match /payouts/{payoutId} {
+      // Payout requests are only accessible by the professional who created it
+      allow get: if isSignedIn() && isOwner(resource.data.professionalId);
+      allow list: if isSignedIn() && resource.data.professionalId == request.auth.uid;
+
+      allow create: if isSignedIn() && isOwner(incoming().professionalId) && isValidId(payoutId)
+        && incoming().keys().hasAll(['id', 'professionalId', 'professionalName', 'amount', 'status', 'createdAt', 'updatedAt'])
+        && incoming().keys().size() >= 7 && incoming().keys().size() <= 11
+        && isValidPayoutRequest(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
