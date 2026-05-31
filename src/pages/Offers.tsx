@@ -15,30 +15,116 @@ import { ProfessionalCard } from '../components/discovery/ProfessionalCard';
 import { BookingFlow } from '../components/booking/BookingFlow';
 import { ServiceDetailsModal } from '../components/service/ServiceDetailsModal';
 import { MOCK_BARBERS, MOCK_SERVICES } from '../constants/mockData';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Offers = () => {
+  const { user } = useAuth();
   const [selectedPro, setSelectedPro] = useState<(Professional & { user: User }) | null>(null);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  const targetPro = useMemo(() => {
+    // 1. If currently logged-in user is a professional, use them
+    if (user && user.role === 'professional') {
+      const match = MOCK_BARBERS.find(p => p.userId === user.id || p.user.email.toLowerCase() === user.email.toLowerCase());
+      if (match) {
+        return {
+          ...match,
+          user: { ...match.user, ...user }
+        };
+      }
+      return {
+        id: user.id || 'pro-1',
+        userId: user.id || 'pro-1',
+        bio: user.bio || 'Specialist in low fades and traditional styles.',
+        categories: user.categories || ['Barbers'],
+        yearsExperience: 5,
+        serviceMode: (user.travelPreference === 'home' ? 'home_visit' : (user.travelPreference === 'shop' ? 'shop' : 'both')) as any,
+        address: 'Lagos, Nigeria',
+        latitude: 6.5244,
+        longitude: 3.3792,
+        avgRating: 5.0,
+        totalReviews: 12,
+        isAvailable: true,
+        user: user
+      };
+    }
+
+    // 2. Otherwise, check if there's any registered professional in local storage
+    const registered = JSON.parse(localStorage.getItem('barbme_registered_users') || '[]');
+    const localProUser = registered.find((u: any) => u.role === 'professional');
+    if (localProUser) {
+      const match = MOCK_BARBERS.find(p => p.userId === localProUser.id || p.user.email.toLowerCase() === localProUser.email.toLowerCase());
+      if (match) {
+        return {
+          ...match,
+          user: { ...match.user, ...localProUser }
+        };
+      }
+      return {
+        id: localProUser.id,
+        userId: localProUser.id,
+        bio: localProUser.bio || 'Specialist in low fades and traditional styles.',
+        categories: localProUser.categories || ['Barbers'],
+        yearsExperience: 5,
+        serviceMode: (localProUser.travelPreference === 'home' ? 'home_visit' : (localProUser.travelPreference === 'shop' ? 'shop' : 'both')) as any,
+        address: 'Lagos, Nigeria',
+        latitude: 6.5244,
+        longitude: 3.3792,
+        avgRating: 5.0,
+        totalReviews: 12,
+        isAvailable: true,
+        user: localProUser
+      };
+    }
+
+    // 3. If no professional is logged in or registered, fall back to Boluwatife (ID '1') as the default registered professional
+    return MOCK_BARBERS.find(p => p.id === '1') || null;
+  }, [user]);
+
+  const offersList = useMemo(() => {
+    if (!targetPro) return [];
+
+    // Filter mock services for this professional
+    const mockServiceOffers = MOCK_SERVICES.filter(s => s.professionalId === targetPro.id);
+
+    // Also include custom services from proServices if they exist
+    const customServiceOffers: Service[] = [];
+    if (targetPro.user.proServices && Array.isArray(targetPro.user.proServices)) {
+      targetPro.user.proServices.forEach((s: any, index: number) => {
+        // Prevent showing duplicate names if they are already in mockServiceOffers
+        if (mockServiceOffers.some(ms => ms.name.toLowerCase() === s.name.toLowerCase())) {
+          return;
+        }
+        const priceNum = typeof s.price === 'string' ? parseFloat(s.price.replace(/\D/g, '')) : s.price;
+        const durationNum = typeof s.duration === 'string' ? parseInt(s.duration) || 45 : s.duration || 45;
+        customServiceOffers.push({
+          id: s.id || `custom-offer-${index}`,
+          professionalId: targetPro.id,
+          category: 'mens_hair',
+          name: s.name,
+          description: s.description || 'Exclusive precision hairstyle signature cut.',
+          price: priceNum || 5000,
+          durationMinutes: durationNum || 45,
+          isActive: true
+        });
+      });
+    }
+
+    return [...mockServiceOffers, ...customServiceOffers];
+  }, [targetPro]);
 
   return (
     <div className="pt-24 min-h-screen bg-bg-deep text-white">
       {/* Editorial Header */}
       <div className="max-w-7xl mx-auto px-6 mb-20 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-brand/5 border border-brand/20 rounded-full text-brand text-[10px] font-black uppercase tracking-[0.2em] mb-8"
-        >
-          <Zap className="w-4 h-4" /> 
-          Offers
-        </motion.div>
+      
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="text-5xl md:text-7xl font-light tracking-tight italic font-serif mb-6"
         >
-          Todays <span className="text-brand">Offers</span>
+          Avaliable <span className="text-brand">Offers</span>
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
@@ -46,15 +132,17 @@ export const Offers = () => {
           transition={{ delay: 0.2 }}
           className="max-w-2xl mx-auto text-[#666] text-sm uppercase font-black tracking-widest leading-relaxed"
         >
-          Book your best style Haircut today.
+          Exceptional value from <span className="text-brand font-bold">{targetPro?.user.fullName || "Lagos & Abuja's finest barbers"}</span>. <br/>
+         Reached time availability. Book your BEST cut today.
         </motion.p>
       </div>
 
       {/* Offers Grid */}
       <div className="max-w-7xl mx-auto px-6 pb-32">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {MOCK_SERVICES.map((service, idx) => {
-                const pro = MOCK_BARBERS.find(p => p.id === service.professionalId);
+        {offersList.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {offersList.map((service, idx) => {
+                const pro = targetPro;
                 if (!pro) return null;
 
                 return (
@@ -66,7 +154,7 @@ export const Offers = () => {
                         transition={{ delay: idx * 0.05 }}
                         className="bg-bg-surface border border-border-muted rounded-3xl overflow-hidden group hover:border-brand/30 transition-all flex flex-col md:flex-row shadow-2xl shadow-black/40"
                     >
-                        <div className="md:w-48 h-48 md:h-full relative overflow-hidden">
+                        <div className="md:w-48 h-48 md:h-full relative overflow-hidden text-left">
                             <img 
                                 src={pro.user.avatarUrl} 
                                 className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" 
@@ -81,11 +169,11 @@ export const Offers = () => {
                             </div>
                         </div>
 
-                        <div className="flex-1 p-8 flex flex-col justify-between">
+                        <div className="flex-1 p-8 flex flex-col justify-between text-left">
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <span className="px-3 py-1 bg-brand text-bg-deep text-[9px] font-black uppercase tracking-widest rounded-full">
-                                        SPECIAL DEAL
+                                        TODAYS DEAL
                                     </span>
                                     <div className="flex items-center gap-2 text-[#444]">
                                         <Clock className="w-4 h-4" />
@@ -119,7 +207,16 @@ export const Offers = () => {
                     </motion.div>
                 );
             })}
-        </div>
+          </div>
+        ) : (
+          <div className="py-24 text-center border border-dashed border-border-muted rounded-3xl bg-bg-surface/55 p-8 max-w-xl mx-auto">
+            <Scissors className="w-10 h-10 text-brand mx-auto mb-4 animate-bounce" />
+            <h3 className="text-xl font-light text-white tracking-tight italic font-serif mb-2">No active promotions</h3>
+            <p className="text-[10px] text-[#666] font-black uppercase tracking-widest leading-relaxed">
+              There are no  offers avaliable for <span className="text-white">{targetPro?.user.fullName}</span> at this time.
+            </p>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
