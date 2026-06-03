@@ -7,7 +7,7 @@ export const Hero = () => {
   const navigate = useNavigate();
   const [location, setLocation] = useState('');
 
-  // Search function that actually filters
+  // Search function that actually filters , nathan always use documentations.
   const handleSearch = (e) => {
     e?.preventDefault();
     if (location.trim()) {
@@ -65,7 +65,7 @@ export const Hero = () => {
               </button>
             </form>
             
-            {/* Social Proof (Black Stylist Images) */}
+            {/* Social Proof (Black Stylist Images)  nathan remember in your src"" is where you /images/the image name */} 
             <div className="flex items-center gap-4">
               <div className="flex -space-x-3">
                 <img className="w-10 h-10 rounded-full border-2 border-bg-deep object-cover" src="" alt="User" />
@@ -93,7 +93,7 @@ export const Hero = () => {
             {/* Main Image 1 (The Professional) */}
             <div className="relative z-10 w-[350px] h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 -rotate-3 hover:rotate-0 transition-transform duration-700">
               <img 
-                src="https://images.unsplash.com/photo-1621605815841-aa33c56b029a?w=800&q=80" 
+                src=""  // add image here with /images/image name.
                 alt="Professional Barber at work" 
                 className="w-full h-full object-cover"
               />
@@ -103,7 +103,7 @@ export const Hero = () => {
             {/* Main Image 2 (The Result/Detail) */}
             <div className="absolute top-10 right-0 z-20 w-[280px] h-[380px] rounded-2xl overflow-hidden shadow-2xl border border-brand/30 rotate-6 translate-y-12 hover:rotate-0 transition-transform duration-700">
               <img 
-                src="https://images.unsplash.com/photo-1599351431247-f10f21698194?w=800&q=80" 
+                src=""  // add image here with /images/image name.
                 alt="Clean Fade Haircut" 
                 className="w-full h-full object-cover"
               />
