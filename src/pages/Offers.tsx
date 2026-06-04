@@ -1,206 +1,183 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Zap, 
   Scissors, 
   Clock, 
   Star, 
-  TrendingDown, 
-  Search,
-  Filter,
-  ArrowRight
+  ArrowRight,
+  Tag,
+  Loader2
 } from 'lucide-react';
-import { Professional, User, Service, ServiceCategory } from '../types';
-import { ProfessionalCard } from '../components/discovery/ProfessionalCard';
+import { Professional, User, Service } from '../types';
 import { BookingFlow } from '../components/booking/BookingFlow';
 import { ServiceDetailsModal } from '../components/service/ServiceDetailsModal';
 import { MOCK_BARBERS, MOCK_SERVICES } from '../constants/mockData';
 import { useAuth } from '../contexts/AuthContext';
 
+// High-quality service-specific images for a professional look
+const SERVICE_IMAGES = [
+  "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=500", // Skin Fade
+  "https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=500", // Beard Trim
+  "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=500", // Classic Cut
+  "https://images.unsplash.com/photo-1646753522408-077ef9839300?q=80&w=500", // Braids/Texture
+  "https://images.unsplash.com/photo-1593702275677-f916c8c98ca3?q=80&w=500", // Luxury Shave
+];
+
 export const Offers = () => {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [selectedPro, setSelectedPro] = useState<(Professional & { user: User }) | null>(null);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  const targetPro = useMemo(() => {
-    // 1. If currently logged-in user is a professional, use them
-    if (user && user.role === 'professional') {
-      const match = MOCK_BARBERS.find(p => p.userId === user.id || p.user.email.toLowerCase() === user.email.toLowerCase());
-      if (match) {
-        return {
-          ...match,
-          user: { ...match.user, ...user }
-        };
-      }
-      return {
-        id: user.id || 'pro-1',
-        userId: user.id || 'pro-1',
-        bio: user.bio || 'Specialist in low fades and traditional styles.',
-        categories: user.categories || ['Barbers'],
-        yearsExperience: 5,
-        serviceMode: (user.travelPreference === 'home' ? 'home_visit' : (user.travelPreference === 'shop' ? 'shop' : 'both')) as any,
-        address: 'Lagos, Nigeria',
-        latitude: 6.5244,
-        longitude: 3.3792,
-        avgRating: 5.0,
-        totalReviews: 12,
-        isAvailable: true,
-        user: user
-      };
-    }
+  // Simulate Backend Fetch
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
-    // 2. Otherwise, check if there's any registered professional in local storage
+  const targetPro = useMemo(() => {
+    // 1. Check Auth 2. Check LocalStorage 3. Fallback to Mock
     const registered = JSON.parse(localStorage.getItem('barbme_registered_users') || '[]');
     const localProUser = registered.find((u: any) => u.role === 'professional');
-    if (localProUser) {
-      const match = MOCK_BARBERS.find(p => p.userId === localProUser.id || p.user.email.toLowerCase() === localProUser.email.toLowerCase());
-      if (match) {
-        return {
-          ...match,
-          user: { ...match.user, ...localProUser }
-        };
-      }
-      return {
-        id: localProUser.id,
-        userId: localProUser.id,
-        bio: localProUser.bio || 'Specialist in low fades and traditional styles.',
-        categories: localProUser.categories || ['Barbers'],
+    const activeUser = (authUser?.role === 'professional' ? authUser : localProUser);
+
+    if (activeUser) {
+      const match = MOCK_BARBERS.find(p => p.userId === activeUser.id);
+      return match ? { ...match, user: { ...match.user, ...activeUser } } : {
+        id: activeUser.id,
+        userId: activeUser.id,
+        bio: activeUser.bio || 'Premium grooming specialist.',
+        categories: activeUser.categories || ['Barbers'],
         yearsExperience: 5,
-        serviceMode: (localProUser.travelPreference === 'home' ? 'home_visit' : (localProUser.travelPreference === 'shop' ? 'shop' : 'both')) as any,
+        serviceMode: 'both',
         address: 'Lagos, Nigeria',
-        latitude: 6.5244,
-        longitude: 3.3792,
-        avgRating: 5.0,
-        totalReviews: 12,
+        avgRating: 4.9,
+        totalReviews: 24,
         isAvailable: true,
-        user: localProUser
+        user: activeUser
       };
     }
-
-    // 3. If no professional is logged in or registered, fall back to Boluwatife (ID '1') as the default registered professional
-    return MOCK_BARBERS.find(p => p.id === '1') || null;
-  }, [user]);
+    return MOCK_BARBERS[0];
+  }, [authUser]);
 
   const offersList = useMemo(() => {
     if (!targetPro) return [];
-
-    // Filter mock services for this professional
-    const mockServiceOffers = MOCK_SERVICES.filter(s => s.professionalId === targetPro.id);
-
-    // Also include custom services from proServices if they exist
-    const customServiceOffers: Service[] = [];
-    if (targetPro.user.proServices && Array.isArray(targetPro.user.proServices)) {
-      targetPro.user.proServices.forEach((s: any, index: number) => {
-        // Prevent showing duplicate names if they are already in mockServiceOffers
-        if (mockServiceOffers.some(ms => ms.name.toLowerCase() === s.name.toLowerCase())) {
-          return;
-        }
-        const priceNum = typeof s.price === 'string' ? parseFloat(s.price.replace(/\D/g, '')) : s.price;
-        const durationNum = typeof s.duration === 'string' ? parseInt(s.duration) || 45 : s.duration || 45;
-        customServiceOffers.push({
-          id: s.id || `custom-offer-${index}`,
-          professionalId: targetPro.id,
-          category: 'mens_hair',
-          name: s.name,
-          description: s.description || 'Exclusive precision hairstyle signature cut.',
-          price: priceNum || 5000,
-          durationMinutes: durationNum || 45,
-          isActive: true
-        });
-      });
-    }
-
-    return [...mockServiceOffers, ...customServiceOffers];
+    const mocks = MOCK_SERVICES.filter(s => s.professionalId === targetPro.id);
+    const customs = (targetPro.user.proServices || []).map((s: any, i: number) => ({
+      id: s.id || `offer-${i}`,
+      professionalId: targetPro.id,
+      name: s.name,
+      description: s.description || 'Signature premium grooming session.',
+      price: parseInt(s.price) || 5000,
+      durationMinutes: parseInt(s.duration) || 45,
+      isActive: true
+    }));
+    return [...mocks, ...customs];
   }, [targetPro]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-deep flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-brand animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="pt-24 min-h-screen bg-bg-deep text-white">
-      {/* Editorial Header */}
+    <div className="pt-24 min-h-screen bg-bg-deep text-white selection:bg-brand selection:text-bg-deep">
+      {/* Dynamic Background Glow */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand/5 rounded-full blur-[120px] -z-10" />
+
       <div className="max-w-7xl mx-auto px-6 mb-20 text-center">
-      
+        
+        
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-5xl md:text-7xl font-light tracking-tight italic font-serif mb-6"
+          className="text-6xl md:text-8xl font-light tracking-tighter italic font-serif mb-8"
         >
-          Avaliable <span className="text-brand">Offers</span>
+          Special <span className="text-brand">Offers</span>
         </motion.h1>
+        
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="max-w-2xl mx-auto text-[#666] text-sm uppercase font-black tracking-widest leading-relaxed"
+          transition={{ delay: 0.1 }}
+          className="max-w-xl mx-auto text-[#888] text-[11px] md:text-xs uppercase font-bold tracking-[0.3em] leading-relaxed"
         >
-          Exceptional value from <span className="text-brand font-bold">{targetPro?.user.fullName || "Lagos & Abuja's finest barbers"}</span>. <br/>
-         Reached time availability. Book your BEST cut today.
+          Premium services at exceptional rates from <span className="text-white underline decoration-brand underline-offset-4"></span>. 
+          Limited availability for this week only.
         </motion.p>
       </div>
 
-      {/* Offers Grid */}
-      <div className="max-w-7xl mx-auto px-6 pb-32">
+      <div className="max-w-7xl mx-auto px-6 pb-40">
         {offersList.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {offersList.map((service, idx) => {
-                const pro = targetPro;
-                if (!pro) return null;
+                // Calculate a fake "original price" for the discount look
+                const originalPrice = Math.ceil(service.price * 1.3 / 500) * 500;
+                const discount = Math.round(((originalPrice - service.price) / originalPrice) * 100);
 
                 return (
                     <motion.div
                         key={service.id}
-                        initial={{ opacity: 0, x: idx % 2 === 0 ? -20 : 20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="bg-bg-surface border border-border-muted rounded-3xl overflow-hidden group hover:border-brand/30 transition-all flex flex-col md:flex-row shadow-2xl shadow-black/40"
+                        transition={{ delay: idx * 0.1 }}
+                        className="bg-bg-surface/40 backdrop-blur-sm border border-border-muted rounded-[2rem] overflow-hidden group hover:border-brand/40 transition-all duration-500 flex flex-col md:flex-row h-full shadow-2xl"
                     >
-                        <div className="md:w-48 h-48 md:h-full relative overflow-hidden text-left">
+                        {/* Different Image for Each Div based on index */}
+                        <div className="md:w-56 h-64 md:h-auto relative overflow-hidden">
                             <img 
-                                src={pro.user.avatarUrl} 
-                                className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" 
+                                src={SERVICE_IMAGES[idx % SERVICE_IMAGES.length]} 
+                                className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" 
+                                alt={service.name}
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-bg-deep via-transparent to-transparent opacity-60" />
-                            <div className="absolute bottom-4 left-4">
-                                <p className="text-[10px] font-black text-white uppercase tracking-widest">{pro.user.fullName}</p>
-                                <div className="flex items-center gap-1 text-brand">
-                                    <Star className="w-3 h-3 fill-brand" />
-                                    <span className="text-[10px] font-mono">{pro.avgRating}</span>
-                                </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-bg-deep/80 via-transparent to-transparent" />
+                            <div className="absolute top-4 left-4">
+                               <div className="bg-brand text-bg-deep px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-xl">
+                                  {discount}% OFF
+                               </div>
                             </div>
                         </div>
 
-                        <div className="flex-1 p-8 flex flex-col justify-between text-left">
+                        <div className="flex-1 p-10 flex flex-col justify-between">
                             <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="px-3 py-1 bg-brand text-bg-deep text-[9px] font-black uppercase tracking-widest rounded-full">
-                                        TODAYS DEAL
-                                    </span>
-                                    <div className="flex items-center gap-2 text-[#444]">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+                                        <Zap className="w-3 h-3 text-brand fill-brand" />
+                                        <span className="text-[9px] font-black text-white uppercase tracking-widest">Flash Deal</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[#666]">
                                         <Clock className="w-4 h-4" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">{service.durationMinutes} MIN</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">{service.durationMinutes}m</span>
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-light text-white tracking-tight italic font-serif mb-2 group-hover:text-brand transition-colors">
+                                
+                                <h3 className="text-3xl font-light text-white tracking-tight italic font-serif mb-4 group-hover:text-brand transition-colors">
                                     {service.name}
                                 </h3>
-                                <p className="text-[10px] text-[#555] uppercase font-black tracking-widest leading-relaxed mb-6">
+                                
+                                <p className="text-[11px] text-[#777] font-medium tracking-wide leading-relaxed mb-8 line-clamp-2">
                                     {service.description}
                                 </p>
                             </div>
 
-                            <div className="flex items-center justify-between pt-6 border-t border-border-muted">
-                                <div className="flex items-baseline gap-3">
-                                    <span className="text-2xl font-bold text-white font-mono italic">₦{service.price}</span>
-                                    <span className="text-[10px] text-[#444] line-through font-mono uppercase tracking-widest">₦{service.price + 2000}</span>
+                            <div className="flex items-center justify-between pt-8 border-t border-white/5">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-[#555] line-through font-bold tracking-widest mb-1">₦{originalPrice.toLocaleString()}</span>
+                                    <span className="text-3xl font-light text-white italic font-serif">₦{service.price.toLocaleString()}</span>
                                 </div>
                                 <button 
                                     onClick={() => {
-                                        setSelectedPro(pro);
+                                        setSelectedPro(targetPro);
                                         setSelectedService(service);
                                     }}
-                                    className="flex items-center gap-2 px-6 py-3 bg-white text-bg-deep rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand transition-all group/btn"
+                                    className="flex items-center gap-3 px-8 py-4 bg-brand text-bg-deep rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-lg shadow-brand/20 group/btn active:scale-95"
                                 >
-                                    Book Now <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                                    Book <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                                 </button>
                             </div>
                         </div>
@@ -209,13 +186,19 @@ export const Offers = () => {
             })}
           </div>
         ) : (
-          <div className="py-24 text-center border border-dashed border-border-muted rounded-3xl bg-bg-surface/55 p-8 max-w-xl mx-auto">
-            <Scissors className="w-10 h-10 text-brand mx-auto mb-4 animate-bounce" />
-            <h3 className="text-xl font-light text-white tracking-tight italic font-serif mb-2">No active promotions</h3>
-            <p className="text-[10px] text-[#666] font-black uppercase tracking-widest leading-relaxed">
-              There are no  offers avaliable for <span className="text-white">{targetPro?.user.fullName}</span> at this time.
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="py-32 text-center border-2 border-dashed border-border-muted rounded-[3rem] bg-bg-surface/20 p-12 max-w-2xl mx-auto"
+          >
+            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
+                <Scissors className="w-8 h-8 text-[#333]" />
+            </div>
+            <h3 className="text-3xl font-light text-white italic font-serif mb-4">Seasonal Pause</h3>
+            <p className="text-xs text-[#666] font-bold uppercase tracking-[0.2em] leading-loose max-w-sm mx-auto">
+              {targetPro?.user.fullName} is currently fully booked. Check back soon for exclusive loyalty offers.
             </p>
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -227,7 +210,6 @@ export const Offers = () => {
             onClose={() => setSelectedPro(null)} 
           />
         )}
-
         {selectedService && selectedPro && (
           <ServiceDetailsModal
             isOpen={!!selectedService}
