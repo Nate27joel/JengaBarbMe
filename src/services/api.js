@@ -1,15 +1,14 @@
 import axios from 'axios';
 
-// 1. Configure the base connection
+// 1. Core Configuration
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 2. Add an Interceptor (Optional - useful for the Patient Portal)
-// This automatically attaches your login token to every request
+// 2. Auth Interceptor: Attaches JWT to every request
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -18,36 +17,51 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// 3. Define your API "Endpoints" (Functions to call the backend)
+// 3. Response Interceptor: Handles global errors (like expired tokens)
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Unauthorized: Clear local storage and redirect to login if necessary
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// 4. Resource-Based Endpoints
 export const api = {
-  // --- Appointments ---
-  createBooking: async (bookingData) => {
-    const response = await apiClient.post('/appointments/book', bookingData);
-    return response.data;
+  // Authentication
+  auth: {
+    login: (credentials) => apiClient.post('/auth/login', credentials),
+    register: (userData) => apiClient.post('/auth/register', userData),
+    getProfile: () => apiClient.get('/auth/profile'),
   },
 
-  // --- Blog ---
-  getBlogPosts: async () => {
-    const response = await apiClient.get('/blog');
-    return response.data;
+  // Appointments/Bookings
+  appointments: {
+    create: (bookingData) => apiClient.post('/appointments/book', bookingData),
+    getUserBookings: () => apiClient.get('/appointments/my-bookings'),
+    getProBookings: () => apiClient.get('/appointments/pro-bookings'),
   },
 
-  // --- New Patient (Insurance Check) ---
-  verifyInsurance: async (provider) => {
-    const response = await apiClient.get(`/insurance/check?provider=${provider}`);
-    return response.data;
+  // Professionals/Barbers
+  barbers: {
+    getAll: (params) => apiClient.get('/barbers', { params }), // For search & filtering
+    getById: (id) => apiClient.get(`/barbers/${id}`),
+    updateProfile: (data) => apiClient.put('/barbers/profile', data),
   },
 
-  // --- Investment / Contact ---
-  submitInquiry: async (inquiryData) => {
-    const response = await apiClient.post('/investment/inquire', inquiryData);
-    return response.data;
+  // Blog & Content
+  blog: {
+    getPosts: () => apiClient.get('/blog'),
+    getPost: (slug) => apiClient.get(`/blog/${slug}`),
   },
 
-  // --- Auth (Portal) ---
-  login: async (credentials) => {
-    const response = await apiClient.post('/auth/login', credentials);
-    return response.data;
+  // Support/Inquiries
+  support: {
+    submitInquiry: (data) => apiClient.post('/support/inquire', data),
   }
 };
 
