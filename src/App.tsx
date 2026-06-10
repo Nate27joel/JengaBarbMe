@@ -15,6 +15,7 @@ import { Support } from './pages/Support';
 import { ProLanding } from './pages/ProLanding';
 import { AuthProvider } from './contexts/AuthContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
+import { api } from './services/api';
 
 export default function App() {
   return (

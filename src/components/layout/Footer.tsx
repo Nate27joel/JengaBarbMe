@@ -78,6 +78,8 @@ export const Footer = () => {
               <li>Abuja</li>
               <li>Port Harcourt</li>
               <li>Enugu</li>
+              <li>Aba</li>
+              <li>Kano</li>
             </ul>
           </div>
         </div>
